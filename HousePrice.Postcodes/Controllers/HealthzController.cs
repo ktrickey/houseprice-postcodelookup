@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using HousePrice.Postcodes.Services;
-using Microsoft.AspNetCore.Http;
+﻿using HousePrice.Postcodes.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.Operations;
 
 namespace HousePrice.Postcodes.Controllers
 {
@@ -17,10 +11,10 @@ namespace HousePrice.Postcodes.Controllers
         [HttpGet]
         public ActionResult< PostcodeLookup.PostcodeData> Get()
         {
-	        var data = PostcodeLookup.GetByPostcode("Test");
+            var data = PostcodeLookup.GetByPostcode("Test");
 
-	        return data;
+            return data;
         }
-		
+
     }
 }

@@ -9,76 +9,76 @@ using Serilog;
 
 namespace HousePrice.Postcodes.Services
 {
-	public static class PostcodeLookup
-	{
-		[Serializable]
-		public class PostcodeData
-		{
-			private string _postcode;
+    public static class PostcodeLookup
+    {
+        [Serializable]
+        public class PostcodeData
+        {
+            private string _postcode;
 
-			public long Id { get; set; }
+            public long Id { get; set; }
 
-			public string Postcode
-			{
-				get => _postcode;
-				set => _postcode = value.Replace(" ", string.Empty);
-			}
+            public string Postcode
+            {
+                get => _postcode;
+                set => _postcode = value.Replace(" ", string.Empty);
+            }
 
-			public double? Latitude { get; set; }
-			public double? Longitude { get; set; }
-		}
+            public double? Latitude { get; set; }
+            public double? Longitude { get; set; }
+        }
 
-		private static Dictionary<string, PostcodeData> _postcodeLookup = new Dictionary<string, PostcodeData>();
+        private static Dictionary<string, PostcodeData> _postcodeLookup = new Dictionary<string, PostcodeData>();
 
-		public static bool IsReady => PopulateTask.IsCompleted;
-		private static readonly Task PopulateTask;
-		private static string postcodeFile;
-		static PostcodeLookup()
-		{
-			var builder = new ConfigurationBuilder()
-				.SetBasePath(Directory.GetCurrentDirectory())
-				.AddJsonFile("appsettings.json")
-				.AddEnvironmentVariables();
+        public static bool IsReady => PopulateTask.IsCompleted;
+        private static readonly Task PopulateTask;
+        private static string postcodeFile;
+        static PostcodeLookup()
+        {
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json")
+                .AddEnvironmentVariables();
 
-			var configuration = builder.Build();
+            var configuration = builder.Build();
 
-			
-			postcodeFile = configuration["POSTCODE_DATA"];
 
-			if (postcodeFile != null)
-			{
-				PopulateTask = new Task(() =>
-				{
+            postcodeFile = configuration["POSTCODE_DATA"];
 
-					Log.Information("Loading postcodes");
-					using (var streamReader =
-						new StreamReader(new FileStream(postcodeFile, FileMode.Open, FileAccess.Read)))
-					{
+            if (postcodeFile != null)
+            {
+                PopulateTask = new Task(() =>
+                {
 
-						using (var csvReader = new CsvHelper.CsvReader(streamReader))
-						{
-							csvReader.Configuration.BufferSize = 131072;
-							var recs = csvReader.GetRecords<PostcodeData>();
+                    Log.Information("Loading postcodes");
+                    using (var streamReader =
+                        new StreamReader(new FileStream(postcodeFile, FileMode.Open, FileAccess.Read)))
+                    {
 
-							var timer = Stopwatch.StartNew();
-							_postcodeLookup = recs.ToDictionary(p => p.Postcode);
-							timer.Stop();
-							Console.WriteLine(timer.ElapsedMilliseconds);
+                        using (var csvReader = new CsvHelper.CsvReader(streamReader))
+                        {
+                            csvReader.Configuration.BufferSize = 131072;
+                            var recs = csvReader.GetRecords<PostcodeData>();
 
-						}
-					}
-					Log.Information("Postcodes loaded");
-				});
-				PopulateTask.Start();
-			}
-		}
+                            var timer = Stopwatch.StartNew();
+                            _postcodeLookup = recs.ToDictionary(p => p.Postcode);
+                            timer.Stop();
+                            Console.WriteLine(timer.ElapsedMilliseconds);
 
-		public static PostcodeData GetByPostcode(string postcode)
-		{
-			PopulateTask?.Wait();
+                        }
+                    }
+                    Log.Information("Postcodes loaded");
+                });
+                PopulateTask.Start();
+            }
+        }
 
-			var found = _postcodeLookup.TryGetValue(postcode.ToUpper().Replace(" ", string.Empty), out PostcodeData postcodeData);
-			return found ? postcodeData:null;
-		}
-	}
+        public static PostcodeData GetByPostcode(string postcode)
+        {
+            PopulateTask?.Wait();
+
+            var found = _postcodeLookup.TryGetValue(postcode.ToUpper().Replace(" ", string.Empty), out PostcodeData postcodeData);
+            return found ? postcodeData:null;
+        }
+    }
 }
